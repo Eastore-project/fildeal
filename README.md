@@ -1,7 +1,7 @@
 # Fildeal CLI
 
 Fildeal is a command-line interface (CLI) tool for managing Filecoin deals. This tool provides various commands to compare files, generate data segment pieces, split pieces, and initiate deals with miners. It is inspired by the [mkpiece](https://github.com/willscott/mkpiece) tool and [data-segment-library](https://github.com/filecoin-project/go-data-segment).
-One can run a 2k lotus-miner setup easily using the [scripts](https://gist.github.com/lordshashank/fb2fbd53b5520a862bd451e3603b4718).
+One can run a 2k lotus-miner setup easily using the [scripts](https://gist.github.com/lordshashank/fb2fbd53b5520a862bd451e3603b4718). And then use this tool to initiate boost deals with the miner and test various things.
 
 ## Pre-requisites
 
@@ -91,7 +91,8 @@ fildeal splitpiece <file> <outputDir>
 
 #### `initiate`
 
-The `initiate` command initiates a deal with the specified input folder and miner. Optionally, it starts a server.
+The `initiate` command initiates a deal with the specified input folder and miner. Optionally, it starts a server to serve files to local miners. If you want to host file somewhere else, you can put url [here](https://github.com/lordshashank/filecoin-deals/blob/94338a0ac8338dd0a792ac913555aba82577da89/src/deal/utils/initiateDeal.go#L17).
+InputFolder should be the location of files you want to initiate the deal with.
 
 ```sh
 fildeal initiate <inputFolder> <miner> [--server]
