@@ -7,6 +7,7 @@ import (
 
 	configurations "fildeal/src/config"
 	"fildeal/src/deal"
+	"fildeal/src/index"
 	mkpiece "fildeal/src/mkpiece"
 	"fildeal/src/server"
 	"fildeal/src/utils"
@@ -21,12 +22,14 @@ func main() {
     generate <files...>                Generate a data segment piece from the given files and output it to stdout.
     splitpiece <file> <outputDir>      Split the specified file into pieces and save them in the output directory.
     initiate <inputFolder> <miner>     Initiate a deal with the specified input folder and miner.
+    boost-index <file>                 Parse and index a file similar to Boost.
 
     Examples:
     fildeal cmp a.car b.car
     fildeal generate a.car b.car c.car > out.dat
     fildeal splitpiece input.car outputDir
     fildeal initiate inputFolder miner [--server]
+    fildeal boost-index file.car
     `
 
     // Check for --help flag
@@ -66,7 +69,11 @@ func main() {
             readers = append(readers, r)
         }
         out := mkpiece.MakeDataSegmentPiece(readers)
-        io.Copy(os.Stdout, out)
+        _, err := io.Copy(os.Stdout, out)
+        if err != nil {
+            fmt.Println("Error:", err)
+            return
+        }
 
     case "splitpiece":
         if len(os.Args) != 3 {
@@ -97,6 +104,18 @@ func main() {
             config := configurations.Configurations{Port: configurations.LoadConfigurations().Port} // Example configuration
             handler := server.SetupRouter()
             server.StartServer(config, handler)
+        }
+
+    case "boost-index":
+        if len(os.Args) != 3 {
+            fmt.Println("Usage: fildeal boost-index <file>")
+            return
+        }
+        filePath := os.Args[2]
+        err := index.BoostIndex(filePath)
+        if err != nil {
+            fmt.Println("Error:", err)
+            return
         }
 
     default:

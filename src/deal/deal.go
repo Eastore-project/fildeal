@@ -24,12 +24,18 @@ func MakeDeal(inputFolder string, miner string) error {
    
     // Define and create the output folder if it doesn't exist
     outputFolder := configurations.LoadConfigurations().GenerateCarPath
+	// clear the output folder first if it exists
+	err = os.RemoveAll(outputFolder)
+	if err != nil {
+		return fmt.Errorf("failed to clear generate car folder: %w", err)
+	}
+
     err = os.MkdirAll(outputFolder, 0755)
     if err != nil {
         return fmt.Errorf("failed to create output folder: %w", err)
     }
 
-   for _, file := range files {
+   for i, file := range files {
 		fileInfo, err := file.Info()
 		if err != nil {
 			return fmt.Errorf("failed to get file info: %w", err)
@@ -44,6 +50,12 @@ func MakeDeal(inputFolder string, miner string) error {
 			if err != nil {
 				return fmt.Errorf("failed to convert directory to CAR: %w", err)
 			}
+			// rename the directory to maintain order
+			newFilePath := fmt.Sprintf("%s/%d_%s", outputFolder, i, output.PieceCid)
+			err = os.Rename(fmt.Sprintf("%s/%s.car", outputFolder, output.PieceCid), newFilePath)
+			if err != nil {
+				return fmt.Errorf("failed to rename directory: %w", err)
+			}
 			fmt.Printf("Output: %v\n", output)
 		} else {
 			// Handle file case
@@ -51,6 +63,12 @@ func MakeDeal(inputFolder string, miner string) error {
 			output, err := dealutils.ConvertToCar(filePath, outputFolder, inputFolder)
 			if err != nil {
 				return fmt.Errorf("failed to convert file to CAR: %w", err)
+			}
+			// rename file to maintain order
+			newFilePath := fmt.Sprintf("%s/%d_%s", outputFolder, i, output.PieceCid)
+			err = os.Rename(fmt.Sprintf("%s/%s.car", outputFolder, output.PieceCid), newFilePath)
+			if err != nil {
+				return fmt.Errorf("failed to rename file: %w", err)
 			}
 			fmt.Printf("Output: %v\n", output)
 		}
