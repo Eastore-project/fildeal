@@ -74,6 +74,12 @@ func main() {
             fmt.Println("Error:", err)
             return
         }
+        for _, reader := range readers {
+            // Check if the reader is fully consumed
+            if _, err := reader.Read(make([]byte, 1)); err != io.EOF {
+                panic(err)
+            }
+        }
 
     case "splitpiece":
         if len(os.Args) != 3 {

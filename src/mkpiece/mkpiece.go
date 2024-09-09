@@ -2,7 +2,6 @@ package mkpiece
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"math/bits"
 
@@ -51,21 +50,6 @@ func MakeDataSegmentPiece(subPieces []io.ReadSeeker) io.Reader {
 	out, err := a.AggregateObjectReader(readers)
 	if err != nil {
 		panic(err)
-	}
-	for _, reader := range readers {
-		// Check if the reader is fully consumed
-		if _, err := reader.Read(make([]byte, 1)); err != io.EOF {
-			// // Seek to the current position to get the remaining bytes
-			// currentPos, _ := reader.(io.ReadSeeker).Seek(0, io.SeekCurrent)
-			// // Seek to the end to get the total size
-			// totalSize, _ := reader.(io.ReadSeeker).Seek(0, io.SeekEnd)
-			// // Seek back to the current position
-			// reader.(io.ReadSeeker).Seek(currentPos, io.SeekStart)
-			// // Calculate the remaining bytes
-			// remainingBytes := totalSize - currentPos
-			// fmt.Printf("reader not fully consumed, %d bytes remaining\n", remainingBytes)
-			fmt.Println("reader not fully consumed")
-		}
 	}
 	return out
 }
