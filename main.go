@@ -10,6 +10,7 @@ import (
 	"fildeal/src/index"
 	mkpiece "fildeal/src/mkpiece"
 	"fildeal/src/server"
+	"fildeal/src/types"
 	"fildeal/src/utils"
 )
 
@@ -96,17 +97,34 @@ func main() {
 
     case "initiate":
         if len(os.Args) < 4 {
-            fmt.Println("Usage: fildeal initiate <inputFolder> <miner> [--server]")
+            fmt.Println("Usage: fildeal initiate <inputFolder> <miner> [--server] [--testnet]")
             return
         }
         inputFolder := os.Args[2]
         miner := os.Args[3]
-        err := deal.MakeDeal(inputFolder, miner)
+    
+        // Initialize flags
+        flags := types.DealFlags{}
+    
+        // Parse additional flags
+        for _, arg := range os.Args[4:] {
+            switch arg {
+            case "--testnet":
+                flags.Testnet = true
+            case "--server":
+                flags.Server = true
+            default:
+                fmt.Printf("Unknown flag: %s\n", arg)
+                return
+            }
+        }
+    
+        err := deal.MakeDeal(inputFolder, miner, flags)
         if err != nil {
             fmt.Println("Error:", err)
             return
         }
-        if len(os.Args) == 5 && os.Args[4] == "--server" {
+        if flags.Server {
             config := configurations.Configurations{Port: configurations.LoadConfigurations().Port} // Example configuration
             handler := server.SetupRouter()
             server.StartServer(config, handler)

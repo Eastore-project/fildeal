@@ -19,3 +19,8 @@ type CarParams struct {
 	TmpDir      string
 	Single      bool
 }
+
+type DealFlags struct {
+	Testnet bool
+	Server bool
+}

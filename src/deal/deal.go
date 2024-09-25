@@ -4,6 +4,7 @@ import (
 	configurations "fildeal/src/config"
 	dealutils "fildeal/src/deal/utils"
 	"fildeal/src/mkpiece"
+	"fildeal/src/types"
 	"fmt"
 	"io"
 	"os"
@@ -14,7 +15,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func MakeDeal(inputFolder string, miner string) error {
+func MakeDeal(inputFolder string, miner string, flags types.DealFlags) error {
 
 // Convert each file of input folder to car file in dummy output folder
    files, err := os.ReadDir(inputFolder)
@@ -133,8 +134,22 @@ func MakeDeal(inputFolder string, miner string) error {
 		return fmt.Errorf("failed to get aggregate file size: %w", err)
 	}
 
+	if flags.Testnet {
+	// Upload the aggregate file to Lighthouse
+	apiKey := configurations.LoadConfigurations().LighthouseAPIKey // Add this to your config
+	lighthouseResp, err := dealutils.UploadToLighthouse(aggregatePath, apiKey)
+	if err != nil {
+		return fmt.Errorf("failed to upload to Lighthouse: %w", err)
+	}
+
+	fmt.Printf("File uploaded to Lighthouse. CID: %s, Name: %s, Size: %s\n", 
+		lighthouseResp.Hash, lighthouseResp.Name, lighthouseResp.Size)
+	
+	aggregateName = lighthouseResp.Hash;
+	}
+
 	// Create deal with miner
-	 err = dealutils.InitiateDeal(aggregateName, miner, pieceSize, pieceCid.String(), uint64(carSize))
+	 err = dealutils.InitiateDeal(aggregateName, miner, pieceSize, pieceCid.String(), uint64(carSize), flags)
 	if err != nil {
 		return fmt.Errorf("failed to initiate deal: %w", err)
 	}

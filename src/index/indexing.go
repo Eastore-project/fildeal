@@ -9,6 +9,7 @@ import (
 	"os"
 	"sync/atomic"
 
+	"github.com/filecoin-project/boost/extern/boostd-data/model"
 	"github.com/filecoin-project/go-data-segment/datasegment"
 	commcid "github.com/filecoin-project/go-fil-commcid"
 	commp "github.com/filecoin-project/go-fil-commp-hashhash"
@@ -16,7 +17,15 @@ import (
 	carv2 "github.com/ipld/go-car/v2"
 	"golang.org/x/sync/errgroup"
 )
-
+const (
+	MaxCachedReaders = 128
+	// 20 MiB x 4 parallel deals is just 80MiB RAM overhead required
+	PodsiBuffesrSize = 20e6
+	// Concurrency is driven by the number of available cores. Set reasonable max and mins
+	// to support multiple concurrent AddIndex operations
+	PodsiMaxConcurrency = 32
+	PodsiMinConcurrency = 4
+)
 
 func BoostIndex(filePath string) error { 
     r, err := os.Open(filePath)
@@ -97,7 +106,7 @@ func BoostIndex(filePath string) error {
 	if err := eg.Wait(); err != nil {
 		panic(err)
 	}
-	fmt.Println(len(index.Entries), "entries found")
+	fmt.Println(len(index.Entries), "index entries found")
 	validSegments := make([]datasegment.SegmentDesc, 0, len(index.Entries))
 	for _, res := range results {
 		validSegments = append(validSegments, res...)
@@ -106,6 +115,7 @@ func BoostIndex(filePath string) error {
 	if len(validSegments) == 0 {
 		panic("no valid data segments found")
 	}
+	fmt.Println(len(validSegments), "valid entries found")
 
 	for i, e := range validSegments {
 		if err := e.Validate(); err != nil {
@@ -137,21 +147,31 @@ func BoostIndex(filePath string) error {
 			Reader: lr,
 			cnt:    &readsCnt,
 		}
+		recs := make([]model.Record, 0)
 
-		opts := []carv2.Option{carv2.ZeroLengthSectionAsEOF(true)}
-		blockReader, err := carv2.NewBlockReader(bufio.NewReaderSize(cr, 20e6), opts...)
+		subRecs, err := parseRecordsFromCar(bufio.NewReaderSize(cr, PodsiBuffesrSize))
 		if err != nil {
-			panic(e)
+			return fmt.Errorf("could not parse data segment #%d at offset %d: %w", len(recs), segOffset, err)
 		}
+		for i := range subRecs {
+			subRecs[i].Offset += segOffset
+		}
+		recs = append(recs, subRecs...)
 
-		blockMetadata, err := blockReader.SkipNext()
-		for err == nil {
-			fmt.Printf("Segment #%d CAR Block: %s, Offset: %d, Size: %d\n", i, blockMetadata.Cid, blockMetadata.SourceOffset, blockMetadata.Size)
-			blockMetadata, err = blockReader.SkipNext()
-		}
-		if !errors.Is(err, io.EOF) {
-			fmt.Printf("Error reading blocks: %s\n", err)
-		}
+		// opts := []carv2.Option{carv2.ZeroLengthSectionAsEOF(true)}
+		// blockReader, err := carv2.NewBlockReader(bufio.NewReaderSize(cr, 20e6), opts...)
+		// if err != nil {
+		// 	panic(e)
+		// }
+
+		// blockMetadata, err := blockReader.SkipNext()
+		// for err == nil {
+		// 	fmt.Printf("Segment #%d CAR Block: %s, Offset: %d, Size: %d\n", i, blockMetadata.Cid, blockMetadata.SourceOffset, blockMetadata.Size)
+		// 	blockMetadata, err = blockReader.SkipNext()
+		// }
+		// if !errors.Is(err, io.EOF) {
+		// 	fmt.Printf("Error reading blocks: %s\n", err)
+		// }
 	}
 	fmt.Printf("Parsed PoDSI piece (with %d reads)\n", readsCnt)
 	return nil
@@ -183,4 +203,31 @@ func validateEntries(entries []datasegment.SegmentDesc) ([]datasegment.SegmentDe
 		res = append(res, e)
 	}
 	return res, nil
+}
+
+func parseRecordsFromCar(reader io.Reader) ([]model.Record, error) {
+	// Iterate over all the blocks in the piece to extract the index records
+	recs := make([]model.Record, 0)
+	opts := []carv2.Option{carv2.ZeroLengthSectionAsEOF(true)}
+	blockReader, err := carv2.NewBlockReader(reader, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("getting block reader over piece: %w", err)
+	}
+
+	blockMetadata, err := blockReader.SkipNext()
+	for err == nil {
+		recs = append(recs, model.Record{
+			Cid: blockMetadata.Cid,
+			OffsetSize: model.OffsetSize{
+				Offset: blockMetadata.SourceOffset,
+				Size:   blockMetadata.Size,
+			},
+		})
+
+		blockMetadata, err = blockReader.SkipNext()
+	}
+	if !errors.Is(err, io.EOF) {
+		return nil, fmt.Errorf("generating index for piece: %w", err)
+	}
+	return recs, nil
 }
