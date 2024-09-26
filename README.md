@@ -23,6 +23,13 @@ One can run a 2k lotus-miner setup easily using the [scripts](https://gist.githu
    go build -o fildeal main.go
    ```
 
+3. Setup the environment variables:
+
+   ```sh
+   export FULLNODE_API_INFO="your fullnode api info" # https://api.calibration.node.glif.io for calibration testnet
+   export LOTUS_API_INFO="your miner api info" # Required for --testnet deals
+   ```
+
 ## Known Error
 
 While building the CLI, you might encounter the following error:
@@ -60,7 +67,7 @@ Examples:
 fildeal cmp a.car b.car
 fildeal generate a.car b.car c.car > out.dat
 fildeal splitpiece input.car outputDir
-fildeal initiate inputFolder miner [--server]
+fildeal initiate inputFolder miner [--server] [--testnet]
 ```
 
 ### Commands
@@ -95,7 +102,19 @@ The `initiate` command initiates a deal with the specified input folder and mine
 InputFolder should be the location of files you want to initiate the deal with.
 
 ```sh
-fildeal initiate <inputFolder> <miner> [--server]
+fildeal initiate <inputFolder> <miner> [--server] [--testnet]
 ```
 
-While initiating a deal with 2k miner, or any other miner, you would have to have a wallet with funds to make deal and FULLNODE_API_INFO set in the environment variables.
+While initiating a deal with 2k miner, or any other miner, you would have to have a boost wallet with funds to make deal and FULLNODE_API_INFO set in the environment variables.
+
+`--server` Flag
+
+Starts a server to serve files to local miners. This is useful when you want to host the files locally and make them accessible to the miners in your network.
+
+`--testnet` Flag
+
+Indicates that the deal should be initiated on the Filecoin testnet. This is useful for testing purposes, allowing you to simulate deals without using real Filecoin tokens.
+Few important things to note for making deals on testnet:
+
+- You would need to have filecoin tokens and datacap to make currently supported verified deals on testnet. Get them from [faucet](https://faucet.calibnet.chainsafe-fil.io/).
+- You would need to host the deal CAR file somewhere to serve them to testnet miner. `fildeal` currently supports [lighthouse](https://www.lighthouse.storage/) as the hosting service. You would need to have `LIGHTHOUSE_API_KEY` set in the environment variables. You can get the api key by following [this](https://docs.lighthouse.storage/lighthouse-1/how-to/create-an-api-key).
