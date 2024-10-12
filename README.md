@@ -62,12 +62,15 @@ cmp <parentFile> <childFile>       Compare two files and find the offset of the 
 generate <files...>                Generate a data segment piece from the given files and output it to stdout.
 splitpiece <file> <outputDir>      Split the specified file into pieces and save them in the output directory.
 initiate <inputFolder> <miner>     Initiate a deal with the specified input folder and miner.
+boost-index <file>                 Parse and index an aggregate file similar to Boost.
+
 
 Examples:
 fildeal cmp a.car b.car
 fildeal generate a.car b.car c.car > out.dat
 fildeal splitpiece input.car outputDir
 fildeal initiate inputFolder miner [--server] [--testnet]
+fildeal boost-index file.car
 ```
 
 ### Commands
@@ -118,3 +121,11 @@ Few important things to note for making deals on testnet:
 
 - You would need to have filecoin tokens and datacap to make currently supported verified deals on testnet. Get them from [faucet](https://faucet.calibnet.chainsafe-fil.io/).
 - You would need to host the deal CAR file somewhere to serve them to testnet miner. `fildeal` currently supports [lighthouse](https://www.lighthouse.storage/) as the hosting service. You would need to have `LIGHTHOUSE_API_KEY` set in the environment variables. You can get the api key by following [this](https://docs.lighthouse.storage/lighthouse-1/how-to/create-an-api-key).
+
+#### `boost-index`
+
+The `boost-index` command parses and indexes an aggregate file similar to Boost. This command is used to parse the aggregate file and log the info of various pieces in aggregate like their offsets and lengths.
+
+```sh
+fildeal boost-index <file>
+```
