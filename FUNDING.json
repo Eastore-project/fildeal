@@ -1,0 +1,10 @@
+{
+  "drips": {
+    "ethereum": {
+      "ownedBy": "0xEA96B32c78Afbd1b01C3346f2C42cc2d89655b8D"
+    },
+    "filecoin": {
+      "ownedBy": "0xEA96B32c78Afbd1b01C3346f2C42cc2d89655b8D"
+    }
+  }
+}
