@@ -1,12 +1,10 @@
 package dealutils
 
 import (
-	"fildeal/src/types"
 	"fmt"
 )
 
-
-func ConvertToCar(filePath string, outputDir string, parentPath string) ( *types.Result, error) {
+func ConvertToCar(filePath string, outputDir string, parentPath string) (*Result, error) {
 	carParams := &CarParams{
 		Input:     filePath,
 		PieceSize: 0,
@@ -15,7 +13,7 @@ func ConvertToCar(filePath string, outputDir string, parentPath string) ( *types
 		TmpDir:    "",
 		Single:    true,
 	}
-	output, err := carParams.GenerateCar()
+	output, err := carParams.GenerateCarUtil()
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate car file: %w", err)
 	}
@@ -26,6 +24,5 @@ func ConvertToCar(filePath string, outputDir string, parentPath string) ( *types
 	}
 
 	output.CarSize = uint64(carSize)
-	return  &output, nil
+	return &output, nil
 }
-
