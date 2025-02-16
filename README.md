@@ -88,6 +88,25 @@ Parse and index podsi aggregate similar to Boost.
 fildeal boost-index <file>
 ```
 
+### Data Prep (`data-prep`)
+
+Prepare data for a deal and show deal parameters without actually making the deal. This command is useful for:
+- Generating CAR files
+- Getting deal parameters (Piece CID, Payload CID, sizes)
+- Testing file preparation before making actual deals
+- Uploading to Lighthouse storage (if using lighthouse buffer)
+- Using the parameters to make deals directly with boost
+
+```sh
+fildeal data-prep --input <inputPath> [options]
+```
+
+#### Options:
+- `--input, -i`: Input path to prepare for deal (required)
+- `--output, -o`: Output directory for the CAR file (default: "aggregate_car_file/")
+- `--buffer`: Buffer to use (localhost or lighthouse, default: "localhost")
+- `--lighthouse-api-key`: API key for Lighthouse storage (required when using lighthouse buffer)
+
 ### Make Normal Deal (`deal`)
 
 Initiate a normal deal with a miner without using podsi-aggregation. This is useful when you want to make a simple deal without the aggregation feature.
