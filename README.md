@@ -39,6 +39,17 @@ For easy testing, you can run a 2k lotus-miner setup using these [scripts](https
 
 ## Commands
 
+The CLI provides two main ways to make deals:
+
+1. **Normal Deal (`deal`)**: Use this when you want to make regular filecoin deal without any special aggregation. It's suitable for:
+   - Single file deals
+   - You don't care about aggregation cryptographic proof
+   - Direct deals without podsi-aggregation overhead
+
+2. **Podsi Deal (`podsi-deal`)**: Use this when you need advanced file aggregation. It's recommended for:
+   - Multiple files that need efficient aggregation
+   - You need proof of Data Segment Inclusion of files in the aggregate
+
 ### Compare Files (`cmp`)
 
 Compare two files and find the offset of the child file in the parent file.
@@ -71,36 +82,64 @@ fildeal splitpiece -i <inputFile> -o <outputDir>
 
 ### Parse Boost Index (`boost-index`)
 
-Parse and index an aggregate file similar to Boost.
+Parse and index podsi aggregate similar to Boost.
 
 ```sh
 fildeal boost-index <file>
 ```
 
-### Initiate Deal (`podsi-deal`)
+### Make Normal Deal (`deal`)
 
-Initiate a deal with a miner using podsi-aggregate for folder aggregation. 
+Initiate a normal deal with a miner without using podsi-aggregation. This is useful when you want to make a simple deal without the aggregation feature.
+
+```sh
+fildeal deal --input <inputFolder> --miner <minerID> [options]
+```
+
+### Make Podsi Deal (`podsi-deal`)
+
+Initiate a deal with a miner using podsi-aggregate for folder aggregation. This is recommended when you want to aggregate multiple files efficiently.
 
 ```sh
 fildeal podsi-deal --input <inputFolder> --miner <minerID> [options]
 ```
 
-#### Options:
+#### Options (common for both deal commands):
 - `--input, -i`: Input folder containing files to make deal with (required)
 - `--miner, -m`: Miner ID to make the deal with (required)
 - `--generate-car-path`: Path for generated CAR files (default: "generated_car/")
 - `--aggregate-car-path`: Path for aggregate CAR files (default: "aggregate_car_file/")
 - `--buffer`: Buffer to use (localhost or lighthouse, default: "localhost")
-- `--duration`: Deal duration in epochs (min: 518400 [6 months], max: 1036800 [720 days])
+- `--duration`: Deal duration in epochs (min: 518400 [6 months], max: 1814400 [3.5 years])
 - `--storage-price`: Storage price in attoFIL per epoch per GiB
-- `--verified`: Whether the deal is verified
+- `--verified`: Whether the deal is verified (default: true for testnet, false otherwise)
 - `--server`: Start a server after initiating the deal
 - `--testnet`: Make deal on public testnet
+- `--payload-cid`: Payload CID for the deal (default: "bafkreibtkdcncmofmavpdsar6msrmb2h4d7oetwtwtkz5cv3zsnwoyrrfq")
+- `--lighthouse-download-url`: URL for downloading from Lighthouse (default: "https://gateway.lighthouse.storage/ipfs/")
+- `--lighthouse-api-key`: API key for Lighthouse storage (required when using lighthouse buffer)
 
 When using `--testnet`, you'll need:
 1. Filecoin tokens and datacap from the [faucet](https://faucet.calibnet.chainsafe-fil.io/)
 2. - You would need to host the deal CAR file somewhere to serve them to testnet miner. `fildeal` currently supports [lighthouse](https://www.lighthouse.storage/) as the hosting service. You would need to have `LIGHTHOUSE_API_KEY` set in the environment variables. You can get the api key by following [this](https://docs.lighthouse.storage/lighthouse-1/how-to/create-an-api-key).
 
+## Usage
+
+For making deals with miners, you have two main options:
+
+1. **Regular deals** using the `deal` command:
+   ```sh
+   fildeal deal --input <inputFolder> --miner <minerID> [options]
+   ```
+
+2. **Podsi deals** using the `podsi-deal` command:
+   ```sh
+   fildeal podsi-deal --input <inputFolder> --miner <minerID> [options]
+   ```
+
+Both commands support the same set of options and can be used with either local or lighthouse storage. For testnet deals, you'll need:
+1. Filecoin tokens and datacap from the [faucet](https://faucet.calibnet.chainsafe-fil.io/)
+2. You would need to host the deal CAR file somewhere to serve them to testnet miner. `fildeal` currently supports [lighthouse](https://www.lighthouse.storage/) as the hosting service. You would need to have `LIGHTHOUSE_API_KEY` set in the environment variables. You can get the api key by following [this](https://docs.lighthouse.storage/lighthouse-1/how-to/create-an-api-key).
 
 ## Server Mode
 

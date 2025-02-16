@@ -4,9 +4,9 @@ import (
 	"fmt"
 )
 
-func ConvertToCar(filePath string, outputDir string, parentPath string) (*Result, error) {
+func ConvertToCar(path string, outputDir string, parentPath string) (*Result, error) {
 	carParams := &CarParams{
-		Input:     filePath,
+		Input:     path,
 		PieceSize: 0,
 		OutDir:    outputDir,
 		Parent:    parentPath,

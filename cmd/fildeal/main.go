@@ -20,7 +20,7 @@ func main() {
 			},
 		},
 		Commands: append(
-			[]*cli.Command{getDealCommand()},
+			getDealCommands(),
 			append(getPieceCommands(), getUtilCommands()...)...,
 		),
 	}
