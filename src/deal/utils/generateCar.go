@@ -5,11 +5,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fildeal/src/types"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/eastore-project/fildeal/src/types"
 
 	commcid "github.com/filecoin-project/go-fil-commcid"
 	commp "github.com/filecoin-project/go-fil-commp-hashhash"

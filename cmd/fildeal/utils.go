@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fildeal/src/index"
-	"fildeal/src/utils"
 	"fmt"
+
+	"github.com/eastore-project/fildeal/src/index"
+	"github.com/eastore-project/fildeal/src/utils"
 
 	"github.com/urfave/cli/v2"
 )

@@ -1,4 +1,4 @@
-module fildeal
+module github.com/eastore-project/fildeal
 
 go 1.22.6
 

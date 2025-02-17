@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	utils "fildeal/src/deal/utils"
+	utils "github.com/eastore-project/fildeal/src/deal/utils"
 
 	"github.com/urfave/cli/v2"
 )

@@ -1,11 +1,12 @@
 package main
 
 import (
-	"fildeal/src/deal"
-	dealutils "fildeal/src/deal/utils"
-	"fildeal/src/routes"
-	"fildeal/src/server"
 	"fmt"
+
+	"github.com/eastore-project/fildeal/src/deal"
+	dealutils "github.com/eastore-project/fildeal/src/deal/utils"
+	"github.com/eastore-project/fildeal/src/routes"
+	"github.com/eastore-project/fildeal/src/server"
 
 	"github.com/urfave/cli/v2"
 )

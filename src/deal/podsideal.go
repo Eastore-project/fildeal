@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	utils "fildeal/src/deal/utils"
-	"fildeal/src/mkpiece"
+	utils "github.com/eastore-project/fildeal/src/deal/utils"
+	"github.com/eastore-project/fildeal/src/mkpiece"
 
 	commcid "github.com/filecoin-project/go-fil-commcid"
 	commp "github.com/filecoin-project/go-fil-commp-hashhash"

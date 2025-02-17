@@ -1,11 +1,12 @@
 package main
 
 import (
-	dealutils "fildeal/src/deal/utils"
-	mkpiece "fildeal/src/mkpiece"
 	"fmt"
 	"io"
 	"os"
+
+	dealutils "github.com/eastore-project/fildeal/src/deal/utils"
+	mkpiece "github.com/eastore-project/fildeal/src/mkpiece"
 
 	"github.com/urfave/cli/v2"
 )
