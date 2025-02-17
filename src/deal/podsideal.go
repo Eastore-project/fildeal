@@ -29,14 +29,18 @@ func MakePodsiDeal(ctx *cli.Context) error {
 	if ctx.Uint("duration") < 518400 || ctx.Uint("duration") > 1814400 {
 		return fmt.Errorf("duration must be between 518400 (6 months) and 181440 (app. 3.5 years)")
 	}
+
 	// Process input folder
 	files, err := os.ReadDir(inputFolder)
 	if err != nil {
 		return fmt.Errorf("failed to read input folder: %w", err)
 	}
 
-	// Use provided generateCarPath from context
+	// Create generate-car-path directory
 	outputFolder := ctx.String("generate-car-path")
+	if err := os.MkdirAll(outputFolder, 0755); err != nil {
+		return fmt.Errorf("failed to create generate car folder: %w", err)
+	}
 	err = os.RemoveAll(outputFolder)
 	if err != nil {
 		return fmt.Errorf("failed to clear generate car folder: %w", err)
@@ -96,13 +100,13 @@ func MakePodsiDeal(ctx *cli.Context) error {
 		return fmt.Errorf("failed to get piece CID: %w", err)
 	}
 
-	aggregateName := uuid.New().String()
-	// Use provided aggregateCarPath from context
+	// Create aggregate-car-path directory
 	aggregateFolder := ctx.String("aggregate-car-path")
-	err = os.MkdirAll(aggregateFolder, 0755)
-	if err != nil {
+	if err := os.MkdirAll(aggregateFolder, 0755); err != nil {
 		return fmt.Errorf("failed to create aggregate folder: %w", err)
 	}
+
+	aggregateName := uuid.New().String()
 	aggregatePath := fmt.Sprintf("%s%s.data", aggregateFolder, aggregateName)
 	aggregateFile, err := os.Create(aggregatePath)
 	if err != nil {

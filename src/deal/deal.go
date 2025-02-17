@@ -2,6 +2,7 @@ package deal
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/eastore-project/fildeal/src/buffer"
@@ -12,6 +13,11 @@ import (
 
 func MakeDeal(ctx *cli.Context) error {
 	outDir := ctx.String("aggregate-car-path")
+	// Create output directory if it doesn't exist
+	if err := os.MkdirAll(outDir, 0755); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
+	}
+
 	path := ctx.String("input")
 	miner := ctx.String("miner")
 	bufferType := ctx.String("buffer")
