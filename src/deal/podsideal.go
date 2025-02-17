@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/eastore-project/fildeal/src/buffer"
 	utils "github.com/eastore-project/fildeal/src/deal/utils"
 	"github.com/eastore-project/fildeal/src/mkpiece"
 
@@ -15,7 +16,19 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func MakePodsiDeal(ctx *cli.Context, inputFolder string, miner string) error {
+func MakePodsiDeal(ctx *cli.Context) error {
+	inputFolder := ctx.String("input")
+	miner := ctx.String("miner")
+	bufferType := ctx.String("buffer")
+	lighthouseApiKey := ctx.String("lighthouse-api-key")
+
+	if bufferType == "lighthouse" && lighthouseApiKey == "" {
+		return fmt.Errorf("lighthouse API key is required when using lighthouse buffer")
+	}
+
+	if ctx.Uint("duration") < 518400 || ctx.Uint("duration") > 1814400 {
+		return fmt.Errorf("duration must be between 518400 (6 months) and 181440 (app. 3.5 years)")
+	}
 	// Process input folder
 	files, err := os.ReadDir(inputFolder)
 	if err != nil {
@@ -116,18 +129,40 @@ func MakePodsiDeal(ctx *cli.Context, inputFolder string, miner string) error {
 	if carSize == 0 || err != nil {
 		return fmt.Errorf("failed to get aggregate file size: %w", err)
 	}
-	if ctx.String("buffer") == "lighthouse" {
-		// Upload the aggregate file to Lighthouse using api key from context
-		lighthouseResp, err := utils.UploadToLighthouse(aggregatePath, ctx.String("lighthouse-api-key"))
-		if err != nil {
-			return fmt.Errorf("failed to upload to Lighthouse: %w", err)
-		}
-		fmt.Printf("File uploaded to Lighthouse. CID: %s, Name: %s, Size: %s\n",
-			lighthouseResp.Hash, lighthouseResp.Name, lighthouseResp.Size)
-		aggregateName = lighthouseResp.Hash
+
+	var buf buffer.Buffer
+	var bufferResp *buffer.Response
+	switch bufferType {
+	case "lighthouse":
+		buf = buffer.NewLighthouseBuffer(lighthouseApiKey, ctx.String("lighthouse-download-url"))
+		bufferResp, err = buf.Store(aggregatePath)
+	default:
+		localBuf := buffer.NewLocalBuffer(ctx.Int("port")).(interface {
+			buffer.Buffer
+			StoreForServer(filePath string) (*buffer.Response, error)
+		})
+		bufferResp, err = localBuf.StoreForServer(aggregatePath)
 	}
-	// Pass cli.Context directly to InitiateDeal
-	if err := utils.InitiateDeal(aggregateName, miner, pieceSize, pieceCid.String(), uint64(carSize), ctx); err != nil {
+
+	if err != nil {
+		return fmt.Errorf("failed to store in buffer: %w", err)
+	}
+
+	// Prepare deal parameters
+	dealParams := utils.DealParams{
+		FileName:        bufferResp.Hash,
+		StorageProvider: miner,
+		PieceSize:       pieceSize,
+		CommpCid:        pieceCid.String(),
+		CarFileSize:     uint64(carSize),
+		PayloadCid:      ctx.String("payload-cid"),
+		Duration:        uint64(ctx.Uint("duration")),
+		StoragePrice:    uint64(ctx.Uint("storage-price")),
+		Verified:        ctx.Bool("verified") || (ctx.Bool("testnet") && !ctx.IsSet("verified")),
+		DownloadURL:     bufferResp.URL,
+	}
+
+	if err := utils.InitiateDeal(dealParams); err != nil {
 		return fmt.Errorf("failed to initiate deal: %w", err)
 	}
 	return nil

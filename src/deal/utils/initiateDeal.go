@@ -4,40 +4,39 @@ import (
 	"fmt"
 	"os/exec"
 	"strconv"
-
-	"github.com/urfave/cli/v2"
 )
 
-func InitiateDeal(fileName string, storageProvider string, pieceSize uint64, commpCid string, carFileSize uint64, ctx *cli.Context) error {
-	var payloadCid = ctx.String("payload-cid")
+type DealParams struct {
+	FileName        string
+	StorageProvider string
+	PieceSize       uint64
+	CommpCid        string
+	CarFileSize     uint64
+	PayloadCid      string
+	Duration        uint64
+	StoragePrice    uint64
+	Verified        bool
+	DownloadURL     string
+}
 
+func InitiateDeal(params DealParams) error {
 	command := "boost"
-	var url string
-	var verified string
 
-	// Set verified flag based on testnet and user input
-	if ctx.Bool("verified") || (ctx.Bool("testnet") && !ctx.IsSet("verified")) {
+	verified := "false"
+	if params.Verified {
 		verified = "true"
-	} else {
-		verified = "false"
-	}
-
-	if ctx.String("buffer") == "lighthouse" {
-		url = ctx.String("lighthouse-download-url") + fileName
-	} else {
-		url = fmt.Sprintf("http://localhost:%d/download/car?file_name=%s.data", ctx.Int("port"), fileName)
 	}
 
 	args := []string{
 		"deal",
-		"--provider=" + storageProvider,
-		"--http-url=" + url,
-		"--commp=" + commpCid,
-		"--car-size=" + strconv.Itoa(int(carFileSize)),
-		"--piece-size=" + strconv.Itoa(int(pieceSize)),
-		"--payload-cid=" + payloadCid,
-		"--duration=" + strconv.FormatUint(uint64(ctx.Uint("duration")), 10),
-		"--storage-price=" + strconv.FormatUint(uint64(ctx.Uint("storage-price")), 10),
+		"--provider=" + params.StorageProvider,
+		"--http-url=" + params.DownloadURL,
+		"--commp=" + params.CommpCid,
+		"--car-size=" + strconv.Itoa(int(params.CarFileSize)),
+		"--piece-size=" + strconv.Itoa(int(params.PieceSize)),
+		"--payload-cid=" + params.PayloadCid,
+		"--duration=" + strconv.FormatUint(params.Duration, 10),
+		"--storage-price=" + strconv.FormatUint(params.StoragePrice, 10),
 		"--verified=" + verified,
 	}
 	fmt.Println("Running command: ", command, args)
@@ -46,7 +45,7 @@ func InitiateDeal(fileName string, storageProvider string, pieceSize uint64, com
 		fmt.Println(dealResponse)
 		return fmt.Errorf("failed to initiate deal: %w", err)
 	}
-	fmt.Println("Deal initiated successfully for: " + fileName)
+	fmt.Println("Deal initiated successfully for: " + params.FileName)
 	fmt.Println("Deal Response: ", string(dealResponse))
 	return nil
 }

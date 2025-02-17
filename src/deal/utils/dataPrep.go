@@ -3,6 +3,8 @@ package dealutils
 import (
 	"fmt"
 	"path/filepath"
+
+	"github.com/eastore-project/fildeal/src/buffer"
 )
 
 type DataPrepResult struct {
@@ -11,30 +13,37 @@ type DataPrepResult struct {
 	PieceSize  uint64
 	CarSize    uint64
 	LocalPath  string
-	Hash       string
+	BufferInfo *buffer.Response
 }
 
-func PrepareData(inputPath, outDir string, buffer string, apiKey string) (*DataPrepResult, error) {
+func PrepareData(inputPath, outDir string, bufferConfig *buffer.Config) (*DataPrepResult, error) {
 	output, err := ConvertToCar(inputPath, outDir, inputPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert to car: %w", err)
 	}
 
+	carPath := filepath.Join(outDir, fmt.Sprintf("%s.car", output.PieceCid))
 	result := &DataPrepResult{
 		PieceCid:   output.PieceCid,
 		PayloadCid: output.DataCid,
 		PieceSize:  output.PieceSize,
 		CarSize:    output.CarSize,
-		LocalPath:  filepath.Join(outDir, fmt.Sprintf("%s.car", output.PieceCid)),
+		LocalPath:  carPath,
 	}
 
-	if buffer == "lighthouse" {
-		lighthouseResp, err := UploadToLighthouse(result.LocalPath, apiKey)
-		if err != nil {
-			return nil, fmt.Errorf("failed to upload to Lighthouse: %w", err)
-		}
-		result.Hash = lighthouseResp.Hash
+	var buf buffer.Buffer
+	switch bufferConfig.Type {
+	case "lighthouse":
+		buf = buffer.NewLighthouseBuffer(bufferConfig.ApiKey, bufferConfig.BaseURL)
+	default:
+		buf = buffer.NewLocalBuffer() // No port needed for data prep
 	}
+
+	bufferResp, err := buf.Store(result.LocalPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to store in buffer: %w", err)
+	}
+	result.BufferInfo = bufferResp
 
 	return result, nil
 }

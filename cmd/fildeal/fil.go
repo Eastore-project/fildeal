@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/eastore-project/fildeal/src/buffer"
+
 	"github.com/eastore-project/fildeal/src/deal"
 	dealutils "github.com/eastore-project/fildeal/src/deal/utils"
 	"github.com/eastore-project/fildeal/src/routes"
@@ -92,20 +94,7 @@ func getDealCommands() []*cli.Command {
 			Usage: "Make a normal deal with a miner",
 			Flags: append(commonFlags, bufferFlags...),
 			Action: func(c *cli.Context) error {
-				inputFolder := c.String("input")
-				miner := c.String("miner")
-				buffer := c.String("buffer")
-				lighthouseApiKey := c.String("lighthouse-api-key")
-
-				if buffer == "lighthouse" && lighthouseApiKey == "" {
-					return fmt.Errorf("lighthouse API key is required when using lighthouse buffer")
-				}
-
-				if c.Uint("duration") < 518400 || c.Uint("duration") > 1814400 {
-					return fmt.Errorf("duration must be between 518400 (6 months) and 181440 (app. 3.5 years)")
-				}
-
-				if err := deal.MakeDeal(c, inputFolder, miner); err != nil {
+				if err := deal.MakeDeal(c); err != nil {
 					return err
 				}
 
@@ -123,20 +112,8 @@ func getDealCommands() []*cli.Command {
 			Usage: "Make a deal with a miner using podsi-aggregate for folder aggregation",
 			Flags: append(commonFlags, bufferFlags...),
 			Action: func(c *cli.Context) error {
-				inputFolder := c.String("input")
-				miner := c.String("miner")
-				buffer := c.String("buffer")
-				lighthouseApiKey := c.String("lighthouse-api-key")
 
-				if buffer == "lighthouse" && lighthouseApiKey == "" {
-					return fmt.Errorf("lighthouse API key is required when using lighthouse buffer")
-				}
-
-				if c.Uint("duration") < 518400 || c.Uint("duration") > 1814400 {
-					return fmt.Errorf("duration must be between 518400 (6 months) and 181440 (app. 3.5 years)")
-				}
-
-				if err := deal.MakePodsiDeal(c, inputFolder, miner); err != nil {
+				if err := deal.MakePodsiDeal(c); err != nil {
 					return err
 				}
 
@@ -169,13 +146,15 @@ func getDealCommands() []*cli.Command {
 			Action: func(c *cli.Context) error {
 				inputPath := c.String("input")
 				outDir := c.String("output")
-				buffer := c.String("buffer")
+				bufferType := c.String("buffer")
 
-				if buffer == "lighthouse" && c.String("lighthouse-api-key") == "" {
-					return fmt.Errorf("lighthouse API key is required when using lighthouse buffer")
+				bufferConfig := &buffer.Config{
+					Type:    bufferType,
+					ApiKey:  c.String("lighthouse-api-key"),
+					BaseURL: c.String("lighthouse-download-url"),
 				}
 
-				result, err := dealutils.PrepareData(inputPath, outDir, buffer, c.String("lighthouse-api-key"))
+				result, err := dealutils.PrepareData(inputPath, outDir, bufferConfig)
 				if err != nil {
 					return err
 				}
@@ -187,14 +166,18 @@ func getDealCommands() []*cli.Command {
 				fmt.Printf("Piece Size: %d bytes\n", result.PieceSize)
 				fmt.Printf("CAR Size: %d bytes\n", result.CarSize)
 
-				if buffer == "lighthouse" && result.Hash != "" {
-					fmt.Printf("\nLighthouse Upload Details:\n")
-					fmt.Printf("------------------------\n")
-					fmt.Printf("Download http URL: %s%s\n", c.String("lighthouse-download-url"), result.Hash)
-				} else {
-					fmt.Printf("\nLocal File Details:\n")
-					fmt.Printf("-----------------\n")
-					fmt.Printf("Path: %s\n", result.LocalPath)
+				if result.BufferInfo != nil {
+					if bufferType == "lighthouse" {
+						fmt.Printf("\nLighthouse Upload Details:\n")
+						fmt.Printf("------------------------\n")
+						fmt.Printf("Path: %s\n", result.LocalPath)
+						fmt.Printf("Download URL: %s\n", result.BufferInfo.URL)
+						fmt.Printf("Hash: %s\n", result.BufferInfo.Hash)
+					} else {
+						fmt.Printf("\nLocal File Details:\n")
+						fmt.Printf("-----------------\n")
+						fmt.Printf("Path: %s\n", result.LocalPath)
+					}
 				}
 
 				return nil
