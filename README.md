@@ -1,8 +1,24 @@
 # Fildeal CLI
 
-Fildeal is a command-line interface (CLI) tool for managing Filecoin deals. This tool provides various commands to compare files, generate data segment pieces, split pieces, and initiate deals with miners. It is inspired by the [mkpiece](https://github.com/willscott/mkpiece) tool and [data-segment-library](https://github.com/filecoin-project/go-data-segment).
+Fildeal is a command-line interface (CLI) tool providing general Filecoin utilities. It includes commands for data preparation, making regular and podsi-aggregated deals, comparing files, generating data segment pieces, splitting pieces, and boost indexing.
 
-For easy testing, you can run a 2k lotus-miner setup using these [scripts](https://gist.github.com/lordshashank/fb2fbd53b5520a862bd451e3603b4718), and then use this tool to initiate boost deals with the miner.
+## Table of Contents
+- [Pre-requisites](#pre-requisites)
+  - [Required for all commands](#required-for-all-commands)
+  - [Required only for deal-making commands](#required-only-for-deal-making-commands-deal-and-podsi-deal-and-boost-index)
+- [Installation](#installation)
+- [Commands](#commands)
+  - [Make Normal Deal](#make-normal-deal-deal)
+  - [Make Podsi Deal](#make-podsi-deal-podsi-deal)
+      - [Making deal in testnet](#making-deal-in-testnet)
+      - [Making deal in localnet](#making-deal-in-localnet)
+  - [Data Prep](#data-prep-data-prep)
+  - [Generate Data Segment](#generate-data-segment-podsi-aggregate)
+  - [Split Piece](#split-piece-splitpiece)
+  - [Parse Boost Index](#parse-boost-index-boost-index)
+  - [Compare Files](#compare-files-cmp)
+- [References](#references)
+- [Contributing](#contributing)
 
 ## Pre-requisites
 
@@ -119,7 +135,6 @@ fildeal podsi-deal --input <inputFolder> --miner <minerID> [options]
 - `--storage-price`: Storage price in attoFIL per epoch per GiB
 - `--verified`: Whether the deal is verified (default: true for testnet, false otherwise)
 - `--server`: Start a server after initiating the deal
-- `--testnet`: Make deal on public testnet
 - `--payload-cid`: Payload CID for the deal (default: "bafkreibtkdcncmofmavpdsar6msrmb2h4d7oetwtwtkz5cv3zsnwoyrrfq")
 - `--lighthouse-download-url`: URL for downloading from Lighthouse (default: "https://gateway.lighthouse.storage/ipfs/")
 - `--lighthouse-api-key`: API key for Lighthouse storage (required when using lighthouse buffer)
@@ -129,11 +144,11 @@ fildeal podsi-deal --input <inputFolder> --miner <minerID> [options]
 For calibration testnet, miner `t017840` supports verified deals LARGER THAN 1MB for free. You can make a verified deal with this miner using:
 
 ```bash
-fildeal deal --input <inputFolder> --miner t017840 --testnet --verified
+fildeal deal --input <inputFolder> --miner t017840 --verified --buffer lighthouse
 ```
 OR
 ```bash
-fildeal podsi-deal --input <inputFolder> --miner t017840 --testnet --verified
+fildeal podsi-deal --input <inputFolder> --miner t017840 --verified --buffer lighthouse
 ```
 
 
@@ -142,22 +157,31 @@ When making deals in testnet, you'll need:
 1. Filecoin tokens and datacap from the [faucet](https://faucet.calibnet.chainsafe-fil.io/)
 2. You would need to host the deal CAR file somewhere to serve them to testnet miner. `fildeal` currently supports [lighthouse](https://www.lighthouse.storage/) as the hosting service. You would need to have `LIGHTHOUSE_API_KEY` set in the environment variables. You can get the api key by following [this](https://docs.lighthouse.storage/lighthouse-1/how-to/create-an-api-key).
 
-#### Server Mode
 
-When using the `--server` flag with `podsi-deal`, Fildeal starts a local server to serve files to miners in your network. This is particularly useful for local testing with 2k miners (2kb sector size miner).
+#### Making deal in localnet
+
+For easy testing, you can run a 2k lotus-miner setup using these [scripts](https://gist.github.com/lordshashank/fb2fbd53b5520a862bd451e3603b4718), and then use this tool to initiate deals with the miner.
+
+For testing with local miners, use the `--server` flag. This starts a local server to serve files to miners from your device:
+
 ```bash
 fildeal deal --input <inputFolder> --miner <minerID> --server
 ```
 
-### Compare Files (`cmp`)
+### Data Prep (`data-prep`)
 
-Compare two files and find the offset of the child file in the parent file.
+Prepare data for a deal and show deal parameters without actually making the deal. This command is useful for:
+
+- Generating CAR files
+- Getting deal parameters (Piece CID, Payload CID, sizes)
+- Testing file preparation before making actual deals
+- Uploading to Lighthouse storage (if using lighthouse buffer)
+- Using the parameters to make deals directly with boost
 
 ```bash
-fildeal cmp --parent <parentFile> --child <childFile>
-# or using short flags
-fildeal cmp -p <parentFile> -c <childFile>
+fildeal data-prep --input <inputPath> [options]
 ```
+
 
 ### Generate Data Segment (`podsi-aggregate`)
 
@@ -187,32 +211,27 @@ Parse and index podsi aggregate similar to Boost.
 fildeal boost-index <file>
 ```
 
-### Data Prep (`data-prep`)
+### Compare Files (`cmp`)
 
-Prepare data for a deal and show deal parameters without actually making the deal. This command is useful for:
-
-- Generating CAR files
-- Getting deal parameters (Piece CID, Payload CID, sizes)
-- Testing file preparation before making actual deals
-- Uploading to Lighthouse storage (if using lighthouse buffer)
-- Using the parameters to make deals directly with boost
+Compare two files and find the offset of the child file in the parent file.
 
 ```bash
-fildeal data-prep --input <inputPath> [options]
+fildeal cmp --parent <parentFile> --child <childFile>
+# or using short flags
+fildeal cmp -p <parentFile> -c <childFile>
 ```
 
-#### Options:
+## References
 
-- `--input, -i`: Input path to prepare for deal (required)
-- `--output, -o`: Output directory for the CAR file (default: "aggregate_car_file/")
-- `--buffer`: Buffer to use (localhost or lighthouse, default: "localhost")
-- `--lighthouse-api-key`: API key for Lighthouse storage (required when using lighthouse buffer)
+- [mkpiece](https://github.com/willscott/mkpiece)
+- [data-segment-library](https://github.com/filecoin-project/go-data-segment)
 
-## Environment Variables
+## Contributing
 
-- `FULLNODE_API_INFO`: Your Filecoin node API info
-- `LIGHTHOUSE_API_KEY`: Required for testnet deals using Lighthouse storage
-- `PORT`: Server port (default: 8000)
-- `GENERATE_CAR_PATH`: Path for generated CAR files
-- `AGGREGATE_CAR_PATH`: Path for aggregate CAR files
-- `LIGHTHOUSE_DOWNLOAD_URL`: Lighthouse download URL
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+Please make sure to follow the existing coding style.
