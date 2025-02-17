@@ -75,15 +75,11 @@ var commonFlags = []cli.Flag{
 	},
 	&cli.BoolFlag{
 		Name:  "verified",
-		Usage: "Whether the deal is verified (default: true for testnet, false otherwise)",
+		Usage: "Whether to make a verified deal",
 	},
 	&cli.BoolFlag{
 		Name:  "server",
 		Usage: "Start the server after initiating the deal",
-	},
-	&cli.BoolFlag{
-		Name:  "testnet",
-		Usage: "make deal on public testnet",
 	},
 }
 

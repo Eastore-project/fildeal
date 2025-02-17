@@ -124,34 +124,30 @@ fildeal podsi-deal --input <inputFolder> --miner <minerID> [options]
 - `--lighthouse-download-url`: URL for downloading from Lighthouse (default: "https://gateway.lighthouse.storage/ipfs/")
 - `--lighthouse-api-key`: API key for Lighthouse storage (required when using lighthouse buffer)
 
-When using `--testnet`, you'll need:
+#### Making deal in testnet
 
-1. Filecoin tokens and datacap from the [faucet](https://faucet.calibnet.chainsafe-fil.io/)
-2. - You would need to host the deal CAR file somewhere to serve them to testnet miner. `fildeal` currently supports [lighthouse](https://www.lighthouse.storage/) as the hosting service. You would need to have `LIGHTHOUSE_API_KEY` set in the environment variables. You can get the api key by following [this](https://docs.lighthouse.storage/lighthouse-1/how-to/create-an-api-key).
+For calibration testnet, miner `t017840` supports verified deals LARGER THAN 1MB for free. You can make a verified deal with this miner using:
 
-## Usage
+```bash
+fildeal deal --input <inputFolder> --miner t017840 --testnet --verified
+```
+OR
+```bash
+fildeal podsi-deal --input <inputFolder> --miner t017840 --testnet --verified
+```
 
-For making deals with miners, you have two main options:
 
-1. **Regular deals** using the `deal` command:
-
-   ```bash
-   fildeal deal --input <inputFolder> --miner <minerID> [options]
-   ```
-
-2. **Podsi deals** using the `podsi-deal` command:
-   ```bash
-   fildeal podsi-deal --input <inputFolder> --miner <minerID> [options]
-   ```
-
-Both commands support the same set of options and can be used with either local or lighthouse storage. For testnet deals, you'll need:
+When making deals in testnet, you'll need:
 
 1. Filecoin tokens and datacap from the [faucet](https://faucet.calibnet.chainsafe-fil.io/)
 2. You would need to host the deal CAR file somewhere to serve them to testnet miner. `fildeal` currently supports [lighthouse](https://www.lighthouse.storage/) as the hosting service. You would need to have `LIGHTHOUSE_API_KEY` set in the environment variables. You can get the api key by following [this](https://docs.lighthouse.storage/lighthouse-1/how-to/create-an-api-key).
 
-## Server Mode
+#### Server Mode
 
-When using the `--server` flag with `podsi-deal`, Fildeal starts a local server to serve files to miners in your network. This is particularly useful for local testing with 2k miners (2kb sector size miner)
+When using the `--server` flag with `podsi-deal`, Fildeal starts a local server to serve files to miners in your network. This is particularly useful for local testing with 2k miners (2kb sector size miner).
+```bash
+fildeal deal --input <inputFolder> --miner <minerID> --server
+```
 
 ### Compare Files (`cmp`)
 

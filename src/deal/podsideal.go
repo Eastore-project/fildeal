@@ -162,7 +162,7 @@ func MakePodsiDeal(ctx *cli.Context) error {
 		PayloadCid:      ctx.String("payload-cid"),
 		Duration:        uint64(ctx.Uint("duration")),
 		StoragePrice:    uint64(ctx.Uint("storage-price")),
-		Verified:        ctx.Bool("verified") || (ctx.Bool("testnet") && !ctx.IsSet("verified")),
+		Verified:        ctx.Bool("verified"),
 		DownloadURL:     bufferResp.URL,
 	}
 
