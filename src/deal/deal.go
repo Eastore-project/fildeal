@@ -2,20 +2,20 @@ package deal
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/eastore-project/fildeal/src/buffer"
-	utils "github.com/eastore-project/fildeal/src/deal/utils"
+	dealutils "github.com/eastore-project/fildeal/src/deal/utils"
+	utils "github.com/eastore-project/fildeal/src/utils"
 
 	"github.com/urfave/cli/v2"
 )
 
 func MakeDeal(ctx *cli.Context) error {
 	outDir := ctx.String("aggregate-car-path")
-	// Create output directory if it doesn't exist
-	if err := os.MkdirAll(outDir, 0755); err != nil {
-		return fmt.Errorf("failed to create output directory: %w", err)
+	// Ensure output directory exists
+	if err := utils.EnsureDirectoriesExist(outDir); err != nil {
+		return fmt.Errorf("failed to ensure output directory exists: %w", err)
 	}
 
 	path := ctx.String("input")
@@ -31,7 +31,7 @@ func MakeDeal(ctx *cli.Context) error {
 		return fmt.Errorf("duration must be between 518400 (6 months) and 181440 (app. 3.5 years)")
 	}
 
-	output, err := utils.ConvertToCar(path, outDir, path)
+	output, err := dealutils.ConvertToCar(path, outDir, path)
 	if err != nil {
 		return fmt.Errorf("failed to convert to car: %w", err)
 	}
@@ -56,7 +56,7 @@ func MakeDeal(ctx *cli.Context) error {
 	}
 
 	// Prepare deal parameters
-	dealParams := utils.DealParams{
+	dealParams := dealutils.DealParams{
 		FileName:        bufferResp.Hash,
 		StorageProvider: miner,
 		PieceSize:       output.PieceSize,
@@ -69,7 +69,7 @@ func MakeDeal(ctx *cli.Context) error {
 		DownloadURL:     bufferResp.URL,
 	}
 
-	if err := utils.InitiateDeal(dealParams); err != nil {
+	if err := dealutils.InitiateDeal(dealParams); err != nil {
 		return fmt.Errorf("failed to initiate deal: %w", err)
 	}
 	return nil

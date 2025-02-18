@@ -7,8 +7,9 @@ import (
 	"path/filepath"
 
 	"github.com/eastore-project/fildeal/src/buffer"
-	utils "github.com/eastore-project/fildeal/src/deal/utils"
-	"github.com/eastore-project/fildeal/src/mkpiece"
+	dealutils "github.com/eastore-project/fildeal/src/deal/utils"
+	pieceutils "github.com/eastore-project/fildeal/src/piece/utils"
+	"github.com/eastore-project/fildeal/src/utils"
 
 	commcid "github.com/filecoin-project/go-fil-commcid"
 	commp "github.com/filecoin-project/go-fil-commp-hashhash"
@@ -21,6 +22,8 @@ func MakePodsiDeal(ctx *cli.Context) error {
 	miner := ctx.String("miner")
 	bufferType := ctx.String("buffer")
 	lighthouseApiKey := ctx.String("lighthouse-api-key")
+	outputFolder := ctx.String("generate-car-path")
+	aggregateFolder := ctx.String("aggregate-car-path")
 
 	if bufferType == "lighthouse" && lighthouseApiKey == "" {
 		return fmt.Errorf("lighthouse API key is required when using lighthouse buffer")
@@ -36,18 +39,17 @@ func MakePodsiDeal(ctx *cli.Context) error {
 		return fmt.Errorf("failed to read input folder: %w", err)
 	}
 
-	// Create generate-car-path directory
-	outputFolder := ctx.String("generate-car-path")
-	if err := os.MkdirAll(outputFolder, 0755); err != nil {
-		return fmt.Errorf("failed to create generate car folder: %w", err)
+	// Ensure required directories exist and clean outputFolder
+	if err := utils.EnsureDirectoriesExist(inputFolder, outputFolder, aggregateFolder); err != nil {
+		return fmt.Errorf("failed to ensure directories exist: %w", err)
 	}
-	err = os.RemoveAll(outputFolder)
-	if err != nil {
+
+	// Clear and recreate output folder
+	if err := os.RemoveAll(outputFolder); err != nil {
 		return fmt.Errorf("failed to clear generate car folder: %w", err)
 	}
-	err = os.MkdirAll(outputFolder, 0755)
-	if err != nil {
-		return fmt.Errorf("failed to create output folder: %w", err)
+	if err := utils.EnsureDirectoriesExist(outputFolder); err != nil {
+		return fmt.Errorf("failed to recreate output folder: %w", err)
 	}
 
 	for i, file := range files {
@@ -58,7 +60,7 @@ func MakePodsiDeal(ctx *cli.Context) error {
 		filePath := filepath.Join(inputFolder, fileInfo.Name())
 		if fileInfo.IsDir() {
 			fmt.Printf("Processing directory: %s\n", fileInfo.Name())
-			output, err := utils.ConvertToCar(filePath, outputFolder, inputFolder)
+			output, err := dealutils.ConvertToCar(filePath, outputFolder, inputFolder)
 			if err != nil {
 				return fmt.Errorf("failed to convert directory to CAR: %w", err)
 			}
@@ -69,7 +71,7 @@ func MakePodsiDeal(ctx *cli.Context) error {
 			}
 		} else {
 			fmt.Printf("Processing file: %s\n", fileInfo.Name())
-			output, err := utils.ConvertToCar(filePath, outputFolder, inputFolder)
+			output, err := dealutils.ConvertToCar(filePath, outputFolder, inputFolder)
 			if err != nil {
 				return fmt.Errorf("failed to convert file to CAR: %w", err)
 			}
@@ -90,8 +92,10 @@ func MakePodsiDeal(ctx *cli.Context) error {
 			r.(io.Closer).Close()
 		}
 	}()
-	out := mkpiece.MakeDataSegmentPiece(readers)
-
+	out, err := pieceutils.MakeDataSegmentPiece(readers)
+	if err != nil {
+		return fmt.Errorf("failed to make data segment piece: %w", err)
+	}
 	commpHasher := commp.Calc{}
 	_, _ = io.CopyBuffer(&commpHasher, out, make([]byte, commpHasher.BlockSize()*128))
 	commpVal, pieceSize, _ := commpHasher.Digest()
@@ -101,7 +105,6 @@ func MakePodsiDeal(ctx *cli.Context) error {
 	}
 
 	// Create aggregate-car-path directory
-	aggregateFolder := ctx.String("aggregate-car-path")
 	if err := os.MkdirAll(aggregateFolder, 0755); err != nil {
 		return fmt.Errorf("failed to create aggregate folder: %w", err)
 	}
@@ -124,7 +127,11 @@ func MakePodsiDeal(ctx *cli.Context) error {
 			r.(io.Closer).Close()
 		}
 	}()
-	out = mkpiece.MakeDataSegmentPiece(readers)
+
+	out, err = pieceutils.MakeDataSegmentPiece(readers)
+	if err != nil {
+		return fmt.Errorf("failed to make data segment piece: %w", err)
+	}
 	_, err = io.Copy(aggregateFile, out)
 	if err != nil {
 		return fmt.Errorf("failed to copy aggregate: %w", err)
@@ -153,7 +160,7 @@ func MakePodsiDeal(ctx *cli.Context) error {
 	}
 
 	// Prepare deal parameters
-	dealParams := utils.DealParams{
+	dealParams := dealutils.DealParams{
 		FileName:        bufferResp.Hash,
 		StorageProvider: miner,
 		PieceSize:       pieceSize,
@@ -166,7 +173,7 @@ func MakePodsiDeal(ctx *cli.Context) error {
 		DownloadURL:     bufferResp.URL,
 	}
 
-	if err := utils.InitiateDeal(dealParams); err != nil {
+	if err := dealutils.InitiateDeal(dealParams); err != nil {
 		return fmt.Errorf("failed to initiate deal: %w", err)
 	}
 	return nil

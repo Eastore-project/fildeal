@@ -2,6 +2,8 @@ package dealutils
 
 import (
 	"fmt"
+
+	"github.com/eastore-project/fildeal/src/utils"
 )
 
 func ConvertToCar(path string, outputDir string, parentPath string) (*Result, error) {
@@ -18,7 +20,7 @@ func ConvertToCar(path string, outputDir string, parentPath string) (*Result, er
 		return nil, fmt.Errorf("failed to generate car file: %w", err)
 	}
 
-	carSize, err := GetFileSize(fmt.Sprintf("%s/%s.car", outputDir, output.PieceCid))
+	carSize, err := utils.GetFileSize(fmt.Sprintf("%s/%s.car", outputDir, output.PieceCid))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get car file size: %w", err)
 	}

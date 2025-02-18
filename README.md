@@ -81,6 +81,7 @@ Note: All other commands (`cmp`, `podsi-aggregate`, `splitpiece`, `data-prep`) w
    # Optional: Set custom paths for generated files
    export GENERATE_CAR_PATH="path for generated CAR files" # default: "generated_car/"
    export AGGREGATE_CAR_PATH="path for aggregate CAR files" # default: "aggregate_car_file/"
+   export PROOFS_DIR="path for inclusion proofs" # default: "proofs-dir/"
    export PORT="8000"  # Server port (default: 8000)
    ```
    OR 
@@ -185,13 +186,25 @@ fildeal data-prep --input <inputPath> [options]
 
 ### Generate Data Segment (`podsi-aggregate`)
 
-Generate a data segment piece from all files in an input folder.
+Generate a data segment piece from all files in an input folder and generate inclusion proofs for each file.
 
 ```bash
-fildeal podsi-aggregate --input <inputFolder> --output <outputFile>
+fildeal podsi-aggregate --input <inputFolder> --output <outputFile> [--proof-dir <proofDir>]
 # or using short flags
 fildeal podsi-aggregate -i <inputFolder> -o <outputFile>
 ```
+
+Options:
+- `--input, -i`: Input folder containing files to aggregate (required)
+- `--output, -o`: Output file path where the aggregated piece will be written (required)
+- `--proof-dir`: Directory where inclusion proofs will be stored (default: "proofs-dir/", can be set via PROOFS_DIR env var)
+
+The command will generate:
+1. An aggregated piece file at the specified output path
+2. A proof file for each input file in the proof directory (if specified)
+   - Each proof file will be named `<original_filename>.proof.json`
+   - Proofs contain both subtree and index proofs with hex-encoded paths (0x-prefixed)
+   - These proofs can be used to verify the inclusion of individual files in the aggregate
 
 ### Split Piece (`splitpiece`)
 

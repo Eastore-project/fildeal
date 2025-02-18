@@ -1,10 +1,9 @@
-package dealutils
+package utils
 
 import (
 	"fmt"
 	"os"
 )
-
 
 func GetFileSize(path string) (int64, error) {
 	file, err := os.Open(path)

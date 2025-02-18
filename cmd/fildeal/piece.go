@@ -1,13 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"io"
-	"os"
-
-	dealutils "github.com/eastore-project/fildeal/src/deal/utils"
-	mkpiece "github.com/eastore-project/fildeal/src/mkpiece"
-
+	"github.com/eastore-project/fildeal/src/piece"
 	"github.com/urfave/cli/v2"
 )
 
@@ -29,41 +23,19 @@ func getPieceCommands() []*cli.Command {
 					Usage:    "Output file path where the aggregated piece will be written",
 					Required: true,
 				},
+				&cli.StringFlag{
+					Name:    "proof-dir",
+					Usage:   "Directory where inclusion proofs will be stored",
+					Value:   "proofs-dir/",
+					EnvVars: []string{"PROOFS_DIR"},
+				},
 			},
 			Action: func(c *cli.Context) error {
 				inputFolder := c.String("input")
 				outputFile := c.String("output")
+				proofDir := c.String("proof-dir")
 
-				readers, err := dealutils.GetReaders(inputFolder)
-				if err != nil {
-					return fmt.Errorf("failed to get readers from input folder: %w", err)
-				}
-				defer func() {
-					for _, r := range readers {
-						if closer, ok := r.(io.Closer); ok {
-							closer.Close()
-						}
-					}
-				}()
-
-				out := mkpiece.MakeDataSegmentPiece(readers)
-
-				f, err := os.Create(outputFile)
-				if err != nil {
-					return fmt.Errorf("failed to create output file: %w", err)
-				}
-				defer f.Close()
-
-				if _, err := io.Copy(f, out); err != nil {
-					return fmt.Errorf("failed to write to output file: %w", err)
-				}
-
-				for _, reader := range readers {
-					if _, err := reader.Read(make([]byte, 1)); err != io.EOF {
-						return fmt.Errorf("reader not fully consumed")
-					}
-				}
-				return nil
+				return piece.AggregateWithProofs(inputFolder, outputFile, proofDir)
 			},
 		},
 		{
@@ -86,7 +58,7 @@ func getPieceCommands() []*cli.Command {
 			Action: func(c *cli.Context) error {
 				inputFile := c.String("input")
 				outputDir := c.String("output")
-				return mkpiece.SplitPiece(inputFile, outputDir)
+				return piece.SplitPiece(inputFile, outputDir)
 			},
 		},
 	}
