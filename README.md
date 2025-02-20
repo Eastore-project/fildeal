@@ -37,13 +37,20 @@ Fildeal is a command-line interface (CLI) tool providing general Filecoin utilit
      # Set FULLNODE_API_INFO globally (choose based on your OS):
      # For calibration testnet, use https://api.calibration.node.glif.io
      
-     # For Linux (add to ~/.bashrc or ~/.profile):
-     echo 'export FULLNODE_API_INFO="your fullnode api info"' >> ~/.bashrc
-     source ~/.bashrc
+     # For Linux:
+     # Add to one of these files based on your shell setup:
+     # - ~/.bashrc (for Bash interactive shells)
+     # - ~/.bash_profile (for Bash login shells)
+     # - ~/.profile (for any shell's login)
+     echo 'export FULLNODE_API_INFO="your fullnode api info"' >> ~/.bashrc  # or your preferred config file
+     source ~/.bashrc  # or the file you modified
      
-     # For macOS (add to ~/.zshrc or ~/.bash_profile):
-     echo 'export FULLNODE_API_INFO="your fullnode api info"' >> ~/.zshrc
-     source ~/.zshrc
+     # For macOS:
+     # Add to one of these files based on your shell setup:
+     # - ~/.zshrc (for Zsh, default shell on modern macOS)
+     # - ~/.bash_profile (for Bash if you use it)
+     echo 'export FULLNODE_API_INFO="your fullnode api info"' >> ~/.zshrc  # or your preferred config file
+     source ~/.zshrc  # or the file you modified
      
      boost init
      boost wallet list
