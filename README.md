@@ -159,12 +159,15 @@ OR
 fildeal podsi-deal --input <inputFolder> --miner t017840 --verified --buffer lighthouse
 ```
 
-
 When making deals in testnet, you'll need:
 
 1. Filecoin tokens and datacap from the [faucet](https://faucet.calibnet.chainsafe-fil.io/)
 2. You would need to host the deal CAR file somewhere to serve them to testnet miner. `fildeal` currently supports [lighthouse](https://www.lighthouse.storage/) as the hosting service. You would need to have `LIGHTHOUSE_API_KEY` set in the environment variables. You can get the api key by following [this](https://docs.lighthouse.storage/lighthouse-1/how-to/create-an-api-key).
 
+After making a deal, you can check its status using the boost CLI:
+```bash
+boost deal-status --provider t017840 --deal-uuid <uuid> # deal UUID will be logged in the deal output
+```
 
 #### Making deal in localnet
 
